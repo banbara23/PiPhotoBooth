@@ -1,0 +1,10 @@
+{
+  "NCMB": {
+    "apikey": "xxx",
+    "clientkey": "xxx",
+    "publicFilesUrl": "xxx"
+  },
+  "Slack": {
+    "webHookUrl": "xxx"
+  }
+}

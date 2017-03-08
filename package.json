@@ -1,0 +1,16 @@
+{
+  "name": "pi-photo-booth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "banbara <banbara.work@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "ncmb": "^2.1.4",
+    "qr-image": "^3.2.0",
+    "slack-node": "^0.1.8"
+  }
+}
