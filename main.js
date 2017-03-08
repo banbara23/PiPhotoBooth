@@ -1,10 +1,12 @@
+const config = require('./config');
 const NCMB = require("ncmb");
-const ncmb = new NCMB("ab619cd7fc15dceff07b883efaedbacbf29a95e4b4e0451ab7eb32a4a98fd649", "86a27f861398cfdaeca061fb7a94d1366f6a756b3744ef03bdba9cd5450c60f9");
+const ncmb = new NCMB(config.NCMB.apikey, config.NCMB.clientkey);
 const qr = require('qr-image');
 const fs = require('fs');
 const Slack = require('slack-node');
 
-const BASE_URL = 'https://mb.api.cloud.nifty.com/2013-09-01/applications/6FCGNNPXkvynbFhn/publicFiles/';
+
+const BASE_URL = config.NCMB.publicFilesUrl;
 const yyyyMMddHHmmss = createDataCode();
 const UPLOAD_PHOTO_FILE_NAME = 'photo_' + yyyyMMddHHmmss + ".png"; //NCMBに保存する写真のファイル名
 const UPLOAD_QRCODE_FILE_NAME = 'qr_' + yyyyMMddHHmmss + '.png'; //NCMBに保存するQRコード画像のファイル名
@@ -70,18 +72,19 @@ function postToSlack() {
   const qrcodeUrl = BASE_URL + UPLOAD_QRCODE_FILE_NAME
   console.log(qrcodeUrl);
 
-  const webhookUri = "xoxp-108876200531-108268499681-118324535607-1e3eae5c773fb77d95e7f0859d77e744";
+  const webhookUri = config.Slack.webHookUrl;
   slack = new Slack();
   slack.setWebhook(webhookUri);
-  // // slack emoji 
-  // slack.webhook({
-  //   channel: "#test",
-  //   username: "bot",
-  //   icon_emoji: ":ghost:",
-  //   text: qrcodeUrl
-  // }, function(err, response) {
-  //   console.log(response);
-  // });
+
+  slack.webhook({
+    channel: "#test",
+    username: "bot",
+    icon_emoji: ":ghost:",
+    text: qrcodeUrl
+  }, function(err, response) {
+    if (err) console.log(err);
+    console.log(response);
+  });
 }
 
 /**
