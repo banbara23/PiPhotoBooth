@@ -1,6 +1,6 @@
 const NCMB = require("ncmb");
 const ncmb = new NCMB("ab619cd7fc15dceff07b883efaedbacbf29a95e4b4e0451ab7eb32a4a98fd649", "86a27f861398cfdaeca061fb7a94d1366f6a756b3744ef03bdba9cd5450c60f9");
-const qrCode = require('qrcode-npm')
+const qr = require('qr-image');
 const fs = require('fs');
 const Slack = require('slack-node');
 
@@ -22,9 +22,9 @@ uploadToNcmb(photo, UPLOAD_PHOTO_FILE_NAME)
   .then(function() {
     postToSlack()
   })
-  // .catch(function(err) {
-  //   console.log(err);
-  // })
+  .catch(function(err) {
+    console.log(err);
+  })
 
 /**
  * 写真をNCMBのファイルストレージへアップロード
@@ -49,16 +49,17 @@ function uploadToNcmb(readFileName, uploadFileName) {
  * @param {写真URL} url 
  */
 function createQrCode() {
-  console.log('createQrCode');
   return new Promise(function(resolve, reject) {
     let photoUrl = BASE_URL + UPLOAD_PHOTO_FILE_NAME;
     console.log(photoUrl);
-    console.log('qr.image');
     let qr_png = qr.image(photoUrl, { type: 'png' });
-    console.log('qr_png.pipe');
-    qr_png.pipe(fs.createWriteStream(tmpQrName));
-    console.log('qr end');
-    resolve();
+
+    // pipeの罠対応、onでキャッチしないと画像出力前に次処理が始まる
+    qr_png.pipe(fs.createWriteStream(tmpQrName))
+      .on('finish', function() {
+        // console.log('qr_png finish');
+        resolve();
+      });
   })
 }
 
@@ -69,9 +70,9 @@ function postToSlack() {
   const qrcodeUrl = BASE_URL + UPLOAD_QRCODE_FILE_NAME
   console.log(qrcodeUrl);
 
-  // const webhookUri = "xoxp-108876200531-108268499681-118324535607-1e3eae5c773fb77d95e7f0859d77e744";
-  // slack = new Slack();
-  // slack.setWebhook(webhookUri);
+  const webhookUri = "xoxp-108876200531-108268499681-118324535607-1e3eae5c773fb77d95e7f0859d77e744";
+  slack = new Slack();
+  slack.setWebhook(webhookUri);
   // // slack emoji 
   // slack.webhook({
   //   channel: "#test",
