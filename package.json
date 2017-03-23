@@ -9,6 +9,7 @@
   "author": "banbara <banbara.work@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/storage": "^0.8.0",
     "ncmb": "^2.1.4",
     "qr-image": "^3.2.0",
     "slack-node": "^0.1.8"
