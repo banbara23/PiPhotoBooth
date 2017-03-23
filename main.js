@@ -4,7 +4,7 @@ const ncmb = new NCMB(config.NCMB.apikey, config.NCMB.clientkey);
 const qr = require('qr-image');
 const fs = require('fs');
 const Slack = require('slack-node');
-
+const shell = require('shelljs');
 
 const BASE_URL = config.NCMB.publicFilesUrl;
 const yyyyMMddHHmmss = createDataCode();
@@ -14,19 +14,27 @@ const tmpQrName = './qrcode.png'; //ローカル用のQR画像ファイル名
 
 const photo = './sample.png'; //デバッグ用、後で消す
 
-uploadToNcmb(photo, UPLOAD_PHOTO_FILE_NAME)
-  .then(function() {
-    return createQrCode();
+Promise.resolve()
+  .then(() => takePhoto())
+  .then(() => uploadToNcmb(photo, UPLOAD_PHOTO_FILE_NAME))
+  .then(() => createQrCode())
+  .then(() => uploadToNcmb(tmpQrName, UPLOAD_QRCODE_FILE_NAME))
+  .then(() => postToSlack())
+  .catch((error) => { console.log(error.stack) })
+
+/**
+ * 写真をとる
+ */
+function takePhoto() {
+  return new Promise((resolve, reject) => {
+    // todo: yyyyMMddHHmmssを使う
+    if (shell.exec('asdf', () => {
+        resolve();
+      }).code !== 0) {
+      reject(Error('写真撮影に失敗した。'));
+    }
   })
-  .then(function() {
-    return uploadToNcmb(tmpQrName, UPLOAD_QRCODE_FILE_NAME);
-  })
-  .then(function() {
-    postToSlack()
-  })
-  .catch(function(err) {
-    console.log(err);
-  })
+}
 
 /**
  * 写真をNCMBのファイルストレージへアップロード
@@ -34,9 +42,11 @@ uploadToNcmb(photo, UPLOAD_PHOTO_FILE_NAME)
  */
 function uploadToNcmb(readFileName, uploadFileName) {
   console.log('uploadToNcmb() read:' + readFileName + ' upload:' + uploadFileName);
-  return new Promise(function(resolve) {
+  return new Promise(function(resolve, reject) {
+    if (!fs.existsSync(readFileName)) reject(Error('アップロード画像ファイルがない、撮影に失敗しているかも ' + readFileName));
     fs.readFile(readFileName, function(err, data) {
-      if (err) throw err;
+      if (err) reject(err);
+
       ncmb.File.upload(uploadFileName, data)
         .then(function(response) {
           // console.log(response);
@@ -51,7 +61,7 @@ function uploadToNcmb(readFileName, uploadFileName) {
  * @param {写真URL} url 
  */
 function createQrCode() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     let photoUrl = BASE_URL + UPLOAD_PHOTO_FILE_NAME;
     console.log(photoUrl);
     let qr_png = qr.image(photoUrl, { type: 'png' });
@@ -101,7 +111,7 @@ function createDataCode() {
   return res;
 }
 
-//先頭にゼロ付加
+//10以下なら頭にゼロ付加
 function padZero(num) {
   let result = null;
   if (num < 10) {
